@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embodied AI · Ukubona Evidence Layer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="dark"] {
+    --bg: #09090d;
+    --bg2: #101018;
+    --bg3: #181825;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(255,80,80,0.22);
+    --text: #ddd8e4;
+    --text-dim: #60586e;
+    --text-bright: #f8f4ff;
+    --accent: #ff5050;
+    --accent2: #ff9090;
+    --accent-warm: #ff7a30;
+    --accent-glow: rgba(255,80,80,0.12);
+    --phase-color: #ff5050;
+    --tag-bg: rgba(255,80,80,0.07);
+    --tag-border: rgba(255,80,80,0.2);
+    --toggle-bg: #181825;
+    --human-bg: rgba(255,120,50,0.06);
+    --human-border: rgba(255,120,50,0.2);
+    --human-accent: #ff7a30;
+    --card-shadow: 0 4px 40px rgba(0,0,0,0.6);
+  }
+  :root[data-theme="light"] {
+    --bg: #fdf8f5;
+    --bg2: #f4ede8;
+    --bg3: #eae0d8;
+    --border: rgba(0,0,0,0.08);
+    --border-accent: rgba(180,30,30,0.2);
+    --text: #2a1a1a;
+    --text-dim: #9a8080;
+    --text-bright: #0d0505;
+    --accent: #c82020;
+    --accent2: #e04040;
+    --accent-warm: #c05010;
+    --accent-glow: rgba(200,32,32,0.08);
+    --phase-color: #c82020;
+    --tag-bg: rgba(200,32,32,0.06);
+    --tag-border: rgba(200,32,32,0.18);
+    --toggle-bg: #e0d4cc;
+    --human-bg: rgba(180,70,10,0.05);
+    --human-border: rgba(180,70,10,0.18);
+    --human-accent: #b04010;
+    --card-shadow: 0 4px 40px rgba(0,0,0,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.4s, color 0.4s;
+    overflow-x: hidden;
+  }
+
+  /* Grain */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 3.5rem;
+    gap: 1rem;
+  }
+
+  .breadcrumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.6rem;
+  }
+  .breadcrumb span { color: var(--accent); }
+
+  .layer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    border-radius: 2px;
+    padding: 0.25rem 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .layer-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse-slow 3.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.25; transform: scale(0.5); }
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  h1 em { font-style: italic; color: var(--accent2); }
+
+  .toggle {
+    flex-shrink: 0;
+    background: var(--toggle-bg);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+    margin-top: 0.5rem;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s;
+  }
+  [data-theme="light"] .toggle::after { transform: translateX(20px); }
+
+  /* Phase strip */
+  .phase-strip {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .phase-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .phase-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--phase-color);
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+  }
+  .algebra {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-left: auto;
+    letter-spacing: 0.05em;
+  }
+
+  /* Lead */
+  .lead {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: var(--text);
+    font-weight: 300;
+    margin-bottom: 2.5rem;
+    font-style: italic;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    animation: fadeUp 0.6s ease both;
+  }
+  .section:last-child { border-bottom: none; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section:nth-child(1) { animation-delay: 0.1s; }
+  .section:nth-child(2) { animation-delay: 0.2s; }
+  .section:nth-child(3) { animation-delay: 0.3s; }
+  .section:nth-child(4) { animation-delay: 0.4s; }
+  .section:nth-child(5) { animation-delay: 0.5s; }
+  .section:nth-child(6) { animation-delay: 0.6s; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.7rem;
+  }
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    margin-bottom: 0.9rem;
+    line-height: 1.3;
+  }
+  .section p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text);
+    font-weight: 300;
+  }
+  .section p + p { margin-top: 0.8rem; }
+  .hl { color: var(--accent2); font-style: italic; }
+  .hl-warm { color: var(--human-accent); font-style: italic; }
+
+  /* Example box */
+  .example-box {
+    margin-top: 1.2rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.2rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .example-box .ex-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .example-box p { font-size: 0.95rem !important; line-height: 1.65 !important; }
+
+  /* Human-in-the-loop callout — warm orange, distinct from accent red */
+  .human-callout {
+    margin: 1.4rem 0;
+    background: var(--human-bg);
+    border: 1px solid var(--human-border);
+    border-left: 3px solid var(--human-accent);
+    border-radius: 0 4px 4px 0;
+    padding: 1.1rem 1.3rem;
+  }
+  .human-callout .hc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--human-accent);
+    margin-bottom: 0.55rem;
+  }
+  .human-callout p {
+    font-size: 0.98rem !important;
+    line-height: 1.68 !important;
+    color: var(--text) !important;
+  }
+
+  /* AGI threshold timeline */
+  .agi-track {
+    margin-top: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+  .agi-track::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 12px;
+    bottom: 12px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent), var(--text-dim) 60%, transparent);
+    opacity: 0.3;
+  }
+  .agi-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.65rem 0;
+  }
+  .agi-dot {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border-accent);
+    background: var(--bg2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .agi-dot.now {
+    border-color: var(--human-accent);
+    background: var(--human-bg);
+  }
+  .agi-dot.now::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--human-accent);
+    animation: pulse-slow 2s ease-in-out infinite;
+  }
+  .agi-dot.future {
+    border-color: var(--border);
+    opacity: 0.4;
+  }
+  .agi-dot.future::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    opacity: 0.5;
+  }
+  .agi-content {
+    padding-top: 0.15rem;
+    flex: 1;
+  }
+  .agi-content .agi-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-bright);
+    letter-spacing: 0.06em;
+    margin-bottom: 0.2rem;
+  }
+  .agi-content .agi-title.dim { color: var(--text-dim); }
+  .agi-content .agi-desc {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Audit checklist */
+  .audit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 1rem;
+  }
+  .audit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+  .audit-item:hover { border-color: var(--tag-border); }
+  .audit-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent);
+    padding-top: 0.15rem;
+    flex-shrink: 0;
+    min-width: 18px;
+  }
+  .audit-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+  }
+
+  /* FGT epsilon — the philosophical core */
+  .epsilon-block {
+    margin-top: 1.4rem;
+    padding: 1.2rem 1.4rem;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    border-radius: 4px;
+  }
+  .epsilon-block .ep-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+  .epsilon-block .ep-formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-bright);
+    margin-bottom: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+  .epsilon-block p {
+    font-size: 0.95rem !important;
+    line-height: 1.65 !important;
+    color: var(--text-dim) !important;
+    font-weight: 300 !important;
+  }
+
+  /* Footer nav */
+  .foot-nav {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-start;
+  }
+  .nav-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: gap 0.2s;
+  }
+  .nav-link.prev::before { content: '←'; }
+  .nav-link:hover { gap: 0.9rem; }
+
+  /* Final layer tag */
+  .final-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-dim);
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div>
+      <div class="breadcrumb">Ukubona · WHO India Evidence Synthesis · <span>Layer V</span></div>
+      <div class="layer-badge">Embodied AI · Phase V · Scalar</div>
+      <h1><em>Embodied</em> AI <span class="final-tag">final layer</span></h1>
+    </div>
+    <button class="toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+  </div>
+
+  <div class="phase-strip">
+    <span class="phase-label">V4 Phase</span>
+    <span class="phase-tag">V · Scalar</span>
+    <span class="phase-tag">L(θᵗ⁺¹)</span>
+    <span class="algebra">human in loop · bias detection · equity · PRISMA compliance</span>
+  </div>
+
+  <p class="lead">The conscience of the pipeline — the layer that cannot yet be replaced, because trust is not a function of accuracy. It is a function of consequences survived.</p>
+
+  <div class="section">
+    <div class="section-label">What it is</div>
+    <h2>The auditor the WHO director asked for by name</h2>
+    <p>Embodied AI is the fifth layer — and the one that makes the other four trustworthy. It audits the entire workflow for bias, equity gaps, PRISMA compliance, and methodological integrity. In the current moment, this layer is occupied by a <span class="hl">human being</span>: a health economist, a systematic review methodologist, a senior WHO officer who reads the final product and signs her name to it.</p>
+    <p>When the WHO India director asked for this work to be delivered, she wasn't asking for a faster pipeline. She was asking for the pipeline to produce something she could trust enough to stake her professional judgment on. <span class="hl-warm">That is embodied AI: the final arbiter before the output leaves the room.</span></p>
+
+    <div class="human-callout">
+      <div class="hc-label">Human in the loop — why she asked for this</div>
+      <p>No AI system in 2025 can tell you whether a GRADE summary accurately represents the uncertainty a seasoned health economist would feel reading the underlying papers. No model has faced the consequences of a bad recommendation reaching a health minister. The WHO director has. That accumulated consequence — that lived feedback — is what currently occupies this layer. It is irreplaceable not because the tasks are difficult, but because trust has not yet been transferred.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">What it audits</div>
+    <h2>The checks that protect the whole chain</h2>
+    <div class="audit-list">
+      <div class="audit-item">
+        <span class="audit-icon">B</span>
+        <span class="audit-text">Bias detection — identifying systematic skews in the retrieved literature, including publication bias, language bias toward English-language high-income settings, and indexing gaps in South Asian grey sources</span>
+      </div>
+      <div class="audit-item">
+        <span class="audit-icon">E</span>
+        <span class="audit-text">Equity checks — verifying that vulnerable subpopulations (low-income quintiles, women, rural districts, scheduled castes and tribes) are represented in the evidence base, not averaged away</span>
+      </div>
+      <div class="audit-item">
+        <span class="audit-icon">P</span>
+        <span class="audit-text">PRISMA compliance — ensuring the review flow is documented, reproducible, and meets reporting standards required for WHO evidence briefs</span>
+      </div>
+      <div class="audit-item">
+        <span class="audit-icon">M</span>
+        <span class="audit-text">Methodological review — reading a sample of the agentic extractions against the source papers, catching confident errors the machine cannot flag in itself</span>
+      </div>
+      <div class="audit-item">
+        <span class="audit-icon">C</span>
+        <span class="audit-text">Contextualisation — reading the generative synthesis against what a domain expert actually knows about the Indian health system, flagging mismatches between the abstract evidence and the operational reality</span>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <div class="ex-label">WHO India · Practical example</div>
+      <p>A policy brief on PM-JAY's impact on catastrophic health expenditure reaches Phase V. The generative synthesis correctly summarises the extracted literature. The human auditor notices that every included paper uses administrative enrolment data — not survey-based CHE measurement — and that this distinction is nowhere flagged. She adds a limitations paragraph. The brief is now honest in a way no automated layer could have made it.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">The AGI question</div>
+    <h2>When does the human leave the loop — and what is AGI really?</h2>
+    <p>The original table note read: <span class="hl">Human in loop for now — but AGI coming soon</span>. This deserves to be taken seriously, and then held at arm's length.</p>
+    <p>AGI — in the sense that matters here — is not the point at which a model passes a benchmark. It is the point at which we <span class="hl-warm">trust the output enough to act on it without checking</span>. That trust is not a property of the model. It is a property of the model's track record, accrued through trial, error, consequence, and correction — the same process by which a junior researcher becomes someone whose judgment is trusted unsupervised.</p>
+
+    <div class="agi-track">
+      <div class="agi-step">
+        <div class="agi-dot now"></div>
+        <div class="agi-content">
+          <div class="agi-title">Now — infrastructure, not reasoning</div>
+          <div class="agi-desc">Current AI accelerates every phase but cannot be trusted without human audit. The pipeline is fast. The judgment is still human. This is correct, not a failure.</div>
+        </div>
+      </div>
+      <div class="agi-step">
+        <div class="agi-dot future"></div>
+        <div class="agi-content">
+          <div class="agi-title dim">Near term — calibrated trust in bounded domains</div>
+          <div class="agi-desc">Specific tasks (abstract screening, data extraction) may earn enough verified track record to reduce human review to spot-checks. Domain, not general, trust.</div>
+        </div>
+      </div>
+      <div class="agi-step">
+        <div class="agi-dot future"></div>
+        <div class="agi-content">
+          <div class="agi-title dim">AGI threshold — ε_FGT accumulated through consequence</div>
+          <div class="agi-desc">The model has encountered enough failure, correction, and negative feedback across enough contexts that its judgment in novel situations is trusted the way we trust a seasoned expert. Not yet. But the direction is visible.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">The deeper algebra</div>
+    <h2>Why L(θᵗ⁺¹) is the only honest notation for a human</h2>
+
+    <div class="epsilon-block">
+      <div class="ep-label">The FGT epsilon — what survival accumulates</div>
+      <div class="ep-formula">L(θᵗ⁺¹) ← f(feedback, consequence, error, time)</div>
+      <p>The Scalar phase notation L(θᵗ⁺¹) describes a loss function that updates model parameters. For a human auditor, this is biography. Every miscalculation that reached a policy table, every recommendation that turned out wrong, every brief that needed retraction — this is what the superscript t+1 represents. Updated beliefs, earned through consequence. No model trained on text has this. The WHO director does.</p>
+    </div>
+
+    <p style="margin-top:1.1rem;">This is why the infrastructure framing matters. The first four layers are infrastructure for accumulating the feedback that eventually produces trustworthy judgment. They make the pipeline fast enough to run repeatedly, at enough scale, across enough contexts, that the feedback loops begin to close. <span class="hl">That accumulation — not any single benchmark — is the path to trust.</span></p>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Why this work is pro bono</div>
+    <h2>The loop closes because someone kept it open</h2>
+    <p>This evidence synthesis work is delivered pro bono to WHO India. That choice is itself an act of embodied AI — a human in the loop who decided that the infrastructure for better health policy decisions was worth building before it was paid for. The WHO director's request was not bureaucratic; it was a recognition that the pipeline needed a conscience layer, and that she needed to trust it.</p>
+    <p>The five layers of this taxonomy describe a system. But systems without a human willing to audit them, correct them, and stake something on the outcome are not systems — they are <span class="hl-warm">processes without accountability</span>. Embodied AI is the accountability layer. It exists because consequences exist.</p>
+
+    <div class="human-callout">
+      <div class="hc-label">The pentadic stack</div>
+      <p>World AI provides the environment. Perception AI provides the senses. Agentic AI provides the hands. Generative AI provides the voice. Embodied AI provides the judgment — the accumulated history of being wrong and surviving it. The stack is not complete without all five. And the fifth is, for now, a person.</p>
+    </div>
+  </div>
+
+  <div class="foot-nav">
+    <a class="nav-link prev" href="generative-ai.html">Generative AI</a>
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+</script>
+</body>
+</html>
